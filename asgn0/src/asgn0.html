@@ -1,0 +1,63 @@
+<!-- Oliver Pearce
+opearce@ucsc.edu
+Notes to grader: none c: -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>asgn0</title>
+    </head>
+
+    <body onload="main()">
+        <canvas id="cnv" width="400" height="400">
+        Please use a browser that supports "canvas"
+        </canvas>
+
+        <!-- vector 1 input -->
+        <br>
+        <label for="name">v1: x</label>
+        <input type="text" id="x1" name="v1_x" required minlength="4" maxlength="8" size="10" />
+        <label for="name">y</label>
+        <input type="text" id="y1" name="v1_y" required minlength="4" maxlength="8" size="10" />
+
+        <!-- vector 2 input -->
+        <br>
+        <label for="name">v2: x</label>
+        <input type="text" id="x2" name="v2_x" required minlength="4" maxlength="8" size="10" />
+        <label for="name">y</label>
+        <input type="text" id="y2" name="v2_y" required minlength="4" maxlength="8" size="10" />
+
+        <!-- draw button -->
+        <br>
+        <input type="button" value="Draw" onclick="handleDrawEvent()"></input>
+
+        <!-- selector and magnitude -->
+        <br><br>
+        <label for="pet-select">Operation:</label>
+        <select name="operations" id="op-select">
+            <option value="add">Add</option>
+            <option value="sub">Subtract</option>
+            <option value="mult">Multiply</option>
+            <option value="div">Divide</option>
+            <option value="angle">Angle Between</option>
+            <option value="area">Area</option>
+            <option value="mag">Magnitude</option>
+            <option value="norm">Normalize</option>
+        </select>
+        <label for="name">Scalar: </label>
+        <input type="text" id="scalar" name="scalar" required minlength="4" maxlength="8" size="10" />
+
+        <!-- draw button -->
+        <br>
+        <input type="button" value="Draw" onclick="handleDrawOperationEvent()"></input>
+
+        <script src="asgn0.js"></script>
+        <script src="../lib/cuon-matrix-cse160.js"></script>
+
+        <br><br>
+        <p>Oliver Pearce</p>
+        <i>opearce@ucsc.edu</i>
+
+    </body>
+</html> 
