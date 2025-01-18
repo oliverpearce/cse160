@@ -71,11 +71,13 @@ function connectVariablesToGLSL(){
 // constants
 POINT = 0;
 TRIANGLE = 1;
+CIRCLE = 2;
 
 // globals related to UI
 let g_selectedColor = [1.0,1.0,1.0,1.0];
 let g_selectedSize = 5;
 let g_selectedType = POINT;
+let g_selectedSegments = 8;
 
 // set up actions for HTML UI elements
 function addActionsForHtmlUI(){
@@ -86,6 +88,7 @@ function addActionsForHtmlUI(){
 
     document.getElementById('pointButton').onclick = function() { g_selectedType = POINT; }
     document.getElementById('triButton').onclick = function() { g_selectedType = TRIANGLE; }
+    document.getElementById('circleButton').onclick = function() { g_selectedType = CIRCLE; }
 
     // color slider events
     document.getElementById('redSlide').addEventListener('mouseup', function() { g_selectedColor[0] = this.value/100; });
@@ -94,6 +97,9 @@ function addActionsForHtmlUI(){
 
     // size slider
     document.getElementById('sizeSlide').addEventListener('mouseup', function() { g_selectedSize = this.value; });
+
+    // segment slider
+    document.getElementById('segmentSlide').onclick = function() { g_selectedSegments = this.value; }
 }
 
 function main() {
@@ -131,10 +137,14 @@ function click(ev) {
     else if (g_selectedType == TRIANGLE){
         point = new Triangle();
     }
+    else if (g_selectedType == CIRCLE){
+        point = new Circle();
+    }
 
     point.position = [x,y]; 
     point.color = g_selectedColor.slice();
     point.size = g_selectedSize;
+    point.segments = g_selectedSegments;
     g_shapesList.push(point);
 
     renderAllShapes();
@@ -168,7 +178,7 @@ function renderAllShapes(){
     }
 
     var duration = performance.now() - startTime;
-    sendTextToHtml("numdot: " + len + "ms: " + Math.floor(duration) + "fps: " + Math.floor(10000/duration), "numdot");
+    sendTextToHtml("numdot: " + len + " ms: " + Math.floor(duration) + " fps: " + Math.floor(10000/duration), "numdot");
 }
 
 function sendTextToHtml(text, htmlID){
