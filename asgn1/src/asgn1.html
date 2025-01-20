@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>asgn1</title>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <p id="numdot"> XXX </p>
+
+    <button type="button" id="red">Red</button>
+    <button type="button" id="green">Green</button> 
+    <button type="button" id="blue">Blue</button>
+    <button type="button" id="clear">Clear</button>
+
+    <br><br>
+    <button type="button" id="pointButton">Square</button>
+    <button type="button" id="triButton">Triangle</button>
+    <button type="button" id="circleButton">Circle</button>
+
+    <br>
+    Red <input type="range" min="0" max="100" value="100" class="slider" id="redSlide"></input>
+    <span id="redValue">100</span>
+    <br>
+    Green <input type="range" min="0" max="100" value="100" class="slider" id="greenSlide"></input>
+    <span id="greenValue">100</span>
+    <br>
+    Blue <input type="range" min="0" max="100" value="100" class="slider" id="blueSlide"></input>
+    <span id="blueValue">100</span>
+    <br>
+    Alpha <input type="range" min="0" max="100" value="100" class="slider" id="alphaSlide"></input>
+    <span id="alphaValue">100</span>
+
+    <br>
+    Size <input type="range" min="5" max="40" value="5" class="slider" id="sizeSlide"></input>
+    <span id="sizeValue">5</span>
+    <br>
+    Circle Segments <input type="range" min="8" max="20" value="8" class="slider" id="segmentSlide"></input>
+    <span id="segmentValue">8</span>
+
+    <br><br>
+    <button type="button" id="umbrella">umbrella</button>
+    <button type="button" id="raindrop">raindrop</button>
+    <button type="button" id="animate">animate!</button>
+    <button type="button" id="stopAnimate">stop</button>
+
+    <br><br>
+    <img src="../images/umbrella.png" width=200 height=200 alt="umbrella">
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="Circle.js"></script> 
+    <script src="Triangle.js"></script> 
+    <script src="Point.js"></script>
+    <script src="asgn1.js"></script>
+  </body>
+</html>
