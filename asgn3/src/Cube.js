@@ -8,6 +8,7 @@ class Cube{
         this.uvBuffer = null;
         this.vertices = null;
         this.uvs = null;
+        this.textureNum = 0;
     }
 
     // generate the vertices
@@ -78,6 +79,9 @@ class Cube{
                 return -1;
             }
         }
+
+        // pass the texture number
+        gl.uniform1i(u_whichTexture, this.textureNum);
 
         // position buffer!
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);

@@ -20,10 +20,20 @@ var FSHADER_SOURCE = `
   varying vec2 v_UV;
   uniform vec4 u_FragColor;
   uniform sampler2D u_Sampler0;
+  uniform int u_whichTexture;
   void main() {
-    gl_FragColor = u_FragColor;
-    gl_FragColor = vec4(v_UV, 1.0, 1.0);
-    gl_FragColor = texture2D(u_Sampler0, v_UV);
+    if (u_whichTexture == -2){
+        gl_FragColor = u_FragColor;                 // the color
+    } else if (u_whichTexture == -1){
+        gl_FragColor = vec4(v_UV, 1.0, 1.0);        // use UV debug color
+    } else if (u_whichTexture == 0){
+        gl_FragColor = texture2D(u_Sampler0, v_UV); // the texture0
+    } else {
+        gl_FragColor = vec4(1, 0.2, 0.2, 1);        // error, put redish 
+    }
+    
+    
+    
   }`
 
 // Globals
@@ -93,24 +103,31 @@ function connectVariablesToGLSL(){
     }
 
     // Get the storage location of u_ViewMatrix
-    u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix');
-    if (!u_ViewMatrix) {
-        console.log('Failed to get the storage location of u_ViewMatrix');
-        return;
-    }
+    // u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix');
+    // if (!u_ViewMatrix) {
+    //     console.log('Failed to get the storage location of u_ViewMatrix');
+    //     return;
+    // }
 
     // Get the storage location of u_ProjectionMatrix
-    u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ProjectionMatrix');
-    if (!u_ProjectionMatrix) {
-        console.log('Failed to get the storage location of u_ProjectionMatrix');
+    // u_ProjectionMatrix = gl.getUniformLocation(gl.program, 'u_ProjectionMatrix');
+    // if (!u_ProjectionMatrix) {
+    //     console.log('Failed to get the storage location of u_ProjectionMatrix');
+    //     return;
+    // }
+
+    // Get the storage location of u_Sampler
+    u_Sampler0 = gl.getUniformLocation(gl.program, 'u_Sampler0');
+    if (!u_Sampler0) {
+        console.log('Failed to get the storage location of u_Sampler0');
         return;
     }
 
-    // Get the storage location of u_Sampler
-    var u_Sampler0 = gl.getUniformLocation(gl.program, 'u_Sampler0');
-    if (!u_Sampler0) {
-        console.log('Failed to get the storage location of u_Sampler0');
-        return false;
+    // Get the storage location of u_whichTexture
+    u_whichTexture = gl.getUniformLocation(gl.program, 'u_whichTexture');
+    if (!u_whichTexture) {
+        console.log('Failed to get the storage location of u_whichTexture');
+        return;
     }
 
     // Set an initial value for this matrix to identity
@@ -302,11 +319,11 @@ function sendTextureToGLSL(image) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
 
     // Set the texture unit 0 to the sampler
-    gl.uniform1i(u_Sampler, 0);
+    gl.uniform1i(u_Sampler0, 0);
 
-    gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
+    // gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
 
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, n); // Draw the rectangle
+    // gl.drawArrays(gl.TRIANGLE_STRIP, 0, n); // Draw the rectangle
 }
 
 function main() {
@@ -437,16 +454,15 @@ function renderScene(){
     var headTopSnout = new Matrix4(head.matrix);
     var headBotSnout = new Matrix4(head.matrix);
     var headCollar = new Matrix4(head.matrix);
-    var headEar = new Matrix4(head.matrix);
     head.matrix.scale(0.35, 0.35, 0.35);
-    drawCube(head.matrix, white);
+    drawCube(head.matrix, white, -1);
 
     // top of snout
     var topSnout = new Cube();
     topSnout.matrix = headTopSnout;
     topSnout.matrix.translate(0.3, 0.1, 0.075);
     topSnout.matrix.scale(0.2, 0.1, 0.2);
-    drawCube(topSnout.matrix, gray);
+    drawCube(topSnout.matrix, gray, -2);
 
     // bottom of snout
     var botSnout = new Cube();
@@ -461,7 +477,7 @@ function renderScene(){
     collar.matrix = headCollar;
     collar.matrix.translate(0, -0.05, 0.03);
     collar.matrix.scale(0.33, 0.1, 0.3);
-    drawCube(collar.matrix, red);
+    drawCube(collar.matrix, red, -1);
 
     // front right leg
     var bLeftLeg = new Cube();
@@ -515,10 +531,11 @@ function renderScene(){
     sendTextToHtml("ms: " + Math.floor(duration) + " fps: " + Math.floor(10000/duration), "numdot");
 }
 
-function drawCube(M, color){
+function drawCube(M, color, tn){
     var cube = new Cube();
     cube.matrix = M;
     cube.color = color;
+    cube.textureNum = tn;
     cube.render();
 }
 
