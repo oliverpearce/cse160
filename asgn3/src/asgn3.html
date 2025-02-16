@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>asgn3</title>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <p id="numdot"> XXX </p>
+
+    <button type="button" id="reset">Reset</button>
+
+    <br>
+    Horizontal Camera Angle <input type="range" min="-180" max="180" value="5" class="slider" id="horizAngleSlide"></input>
+    <span id="horizAngleValue">5</span>
+    <br>
+    Vertical Camera Angle <input type="range" min="-90" max="90" value="5" class="slider" id="vertAngleSlide"></input>
+    <span id="vertAngleValue">5</span>
+    <br>
+    Head Rotation <input type="range" min="-45" max="45" value="0" class="slider" id="headSlide"></input>
+    <span id="headValue">0</span>
+    <br>
+    Tail1 Rotation <input type="range" min="-20" max="20" value="0" class="slider" id="tail1Slide"></input>
+    <span id="tail1Value">0</span>
+    <br>
+    Tail2 Rotation <input type="range" min="-10" max="10" value="0" class="slider" id="tail2Slide"></input>
+    <span id="tail2Value">0</span>
+    <br>
+    Tail3 Rotation <input type="range" min="-5" max="5" value="0" class="slider" id="tail3Slide"></input>
+    <span id="tail3Value">0</span>
+    
+    <br><br>
+    Walking n' Talking Animation:
+    <button type="button" id="animationYellowOn">ON</button>
+    <button type="button" id="animationYellowOff">OFF</button>
+
+    <br><br>
+    Oliver Pearce
+    <br>
+    opearce@ucsc.edu
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+
+    <script src="Circle.js"></script> 
+    <script src="Triangle.js"></script> 
+    <script src="Point.js"></script>
+    <script src="Cube.js"></script>
+    <script src="asgn3.js"></script>
+  </body>
+</html>
