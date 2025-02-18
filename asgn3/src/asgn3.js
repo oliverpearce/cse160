@@ -20,26 +20,39 @@ var FSHADER_SOURCE = `
   varying vec2 v_UV;
   uniform vec4 u_FragColor;
   uniform sampler2D u_Sampler0;
+  uniform sampler2D u_Sampler1;
+  uniform sampler2D u_Sampler2;
+  uniform sampler2D u_Sampler3;
   uniform int u_whichTexture;
+  uniform float u_texColorWeight;
   void main() {
-    if (u_whichTexture == -2){
+    if (u_whichTexture == -3){
+        vec4 texColor = texture2D(u_Sampler0, v_UV); // mix base and texture color
+        float t = u_texColorWeight;
+        gl_FragColor = (1.0 - t) * u_FragColor + t * texColor;
+    } else if (u_whichTexture == -2){
         gl_FragColor = u_FragColor;                 // the color
     } else if (u_whichTexture == -1){
         gl_FragColor = vec4(v_UV, 1.0, 1.0);        // use UV debug color
     } else if (u_whichTexture == 0){
         gl_FragColor = texture2D(u_Sampler0, v_UV); // the texture0
+    } else if (u_whichTexture == 1){
+        gl_FragColor = texture2D(u_Sampler1, v_UV); // the texture1 
+    } else if (u_whichTexture == 2){
+        gl_FragColor = texture2D(u_Sampler2, v_UV); // the texture2
+    } else if (u_whichTexture == 3){
+        gl_FragColor = texture2D(u_Sampler3, v_UV); // the texture3
     } else {
-        gl_FragColor = vec4(1, 0.2, 0.2, 1);        // error, put redish 
+        gl_FragColor = vec4(0.5, 0.7, 0.2, 1);      // error, put redish 
     }
-    
-    
-    
   }`
 
 // Globals
-let canvas, gl, a_Position, a_UV, u_FragColor, u_ModelMatrix, u_GlobalRotateMatrix, u_ViewMatrix, u_ProjectionMatrix, u_Sampler0;
-// let u_Size;
+let canvas, gl, a_Position, a_UV, u_FragColor, u_ModelMatrix, u_GlobalRotateMatrix, u_ViewMatrix, u_ProjectionMatrix;
+let u_whichTexture, u_Sampler0, u_Sampler1, u_Sampler2, u_Sampler3;
 let vertexBuffer, vertexArray;
+let g_camera;
+let g_map;
 
 // set up canvas and gl variables
 function setupWebGL(){
@@ -116,17 +129,38 @@ function connectVariablesToGLSL(){
         return;
     }
 
-    // Get the storage location of u_Sampler
+    // Get the storage location of u_whichTexture
+    u_whichTexture = gl.getUniformLocation(gl.program, 'u_whichTexture');
+    if (!u_whichTexture) {
+        console.log('Failed to get the storage location of u_whichTexture');
+        return;
+    }
+
+    // Get the storage location of u_Sampler0
     u_Sampler0 = gl.getUniformLocation(gl.program, 'u_Sampler0');
     if (!u_Sampler0) {
         console.log('Failed to get the storage location of u_Sampler0');
         return;
     }
 
-    // Get the storage location of u_whichTexture
-    u_whichTexture = gl.getUniformLocation(gl.program, 'u_whichTexture');
-    if (!u_whichTexture) {
-        console.log('Failed to get the storage location of u_whichTexture');
+    // Get the storage location of u_Sampler1
+    u_Sampler1 = gl.getUniformLocation(gl.program, 'u_Sampler1');
+    if (!u_Sampler1) {
+        console.log('Failed to get the storage location of u_Sampler1');
+        return;
+    }
+
+    // Get the storage location of u_Sampler2
+    u_Sampler2 = gl.getUniformLocation(gl.program, 'u_Sampler2');
+    if (!u_Sampler2) {
+        console.log('Failed to get the storage location of u_Sampler2');
+        return;
+    }
+
+    // Get the storage location of u_Sampler3
+    u_Sampler3 = gl.getUniformLocation(gl.program, 'u_Sampler3');
+    if (!u_Sampler3) {
+        console.log('Failed to get the storage location of u_Sampler3');
         return;
     }
 
@@ -135,27 +169,10 @@ function connectVariablesToGLSL(){
     gl.uniformMatrix4fv(u_ModelMatrix, false, identityM.elements);
 }
 
-// constants
-POINT = 0;
-TRIANGLE = 1;
-CIRCLE = 2;
-
-// globals related to UI
-let g_animate = false;
-let g_headAngle = 0;
-let g_botSnoutAngle = 0;
-let g_legAngle1 = 0;
-let g_legAngle2 = 0;
-let g_tail1Angle = 0;
-let g_tail2Angle = 0;
-let g_tail3Angle = 0;
 // camera
 let g_horizAngle = 0;
 let g_vertAngle = 0;
 let drag = false;
-let poke = false;
-let nodded = false;
-let nod_start = null;
 let xpos, ypos;
 // colors
 let gray = [0.6, 0.6, 0.6, 1.0];
@@ -174,11 +191,6 @@ function addActionsForHtmlUI(){
         drag = true;
         xpos = ev.clientX;
         ypos = ev.clientY;
-
-        if (ev.shiftKey) {
-            poke = true;
-            nodded = false;
-        }
     };
 
     // dragging camera around
@@ -215,34 +227,19 @@ function addActionsForHtmlUI(){
     document.getElementById('reset').onclick = function() { 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); 
 
-        g_headAngle = 0;
-        document.getElementById('headValue').textContent = 0;
-        document.getElementById('headSlide').value = 0;
-
-        g_botSnoutAngle = 0;
-        g_legAngle1 = 0;
-        g_legAngle2 = 0;
-        g_tail1Angle = 0;
-        document.getElementById('tail1Value').textContent = 0;
-        document.getElementById('tail1Slide').value = 0;
-        g_tail2Angle = 0;
-        document.getElementById('tail2Value').textContent = 0;
-        document.getElementById('tail2Slide').value = 0;
-        g_tail3Angle = 0;
-        document.getElementById('tail3Value').textContent = 0;
-        document.getElementById('tail3Slide').value = 0;
-
         g_horizAngle = 5;
         g_vertAngle = 5;
         document.getElementById('horizAngleValue').textContent = 5;
         document.getElementById('horizAngleSlide').value = 5
         document.getElementById('vertAngleValue').textContent = 5;
         document.getElementById('vertAngleSlide').value = 5;
+        document.getElementById('fovValue').textContent = 60;
+        document.getElementById('fovSlide').value = 60;
+
+        g_camera = new Camera();
+
         renderScene();
     }
-    
-    document.getElementById('animationYellowOff').onclick = function() { g_animate = false; }
-    document.getElementById('animationYellowOn').onclick = function() { g_animate = true; }
 
     // camera slider
     document.getElementById('horizAngleSlide').addEventListener('mousemove', function() {
@@ -257,50 +254,52 @@ function addActionsForHtmlUI(){
         renderScene(); 
     });
 
-    // head slider
-    document.getElementById('headSlide').addEventListener('mousemove', function() {
-        g_headAngle = this.value; 
-        document.getElementById('headValue').textContent = this.value;
-        renderScene(); 
-    });
-
-    // tail
-    document.getElementById('tail1Slide').addEventListener('mousemove', function() {
-        g_tail1Angle = this.value; 
-        document.getElementById('tail1Value').textContent = this.value;
-        renderScene(); 
-    });
-
-    document.getElementById('tail2Slide').addEventListener('mousemove', function() {
-        g_tail2Angle = this.value; 
-        document.getElementById('tail2Value').textContent = this.value;
-        renderScene(); 
-    });
-
-    document.getElementById('tail3Slide').addEventListener('mousemove', function() {
-        g_tail3Angle = this.value; 
-        document.getElementById('tail3Value').textContent = this.value;
-        renderScene(); 
-    });
+    document.getElementById("fovSlide").addEventListener("mousemove", function () {
+		g_fov = this.value;
+        document.getElementById('fovValue').textContent = this.value;
+        renderScene();
+	});
 }
 
 function initTextures() {
-    var image = new Image();  // Create the image object
-    if (!image) {
-        console.log('Failed to create the image object');
+    var image0 = new Image();  // Create the image object
+    if (!image0) {
+        console.log('Failed to create the image0 object');
         return false;
     }
     // Register the event handler to be called on loading an image
-    image.onload = function(){ sendTextureToGLSL(image); };
+    image0.onload = function(){ sendTextureToGLSL(image0, gl.TEXTURE0, 0, u_Sampler0); };
     // Tell the browser to load an image
-    image.src = 'sky.jpg';
+    image0.src = '../images/skybox.jpg';
 
-    // load more textures!
+    var image1 = new Image();
+    if (!image1){
+        console.log('Failed to create the image1 object');
+        return false;
+    }
+    image1.onload = function(){ sendTextureToGLSL(image1, gl.TEXTURE1, 1, u_Sampler1); };
+    image1.src = '../images/mc-dirt.jpg';
+
+    var image2 = new Image();
+    if (!image2){
+        console.log('Failed to create the image2 object');
+        return false;
+    }
+    image2.onload = function(){ sendTextureToGLSL(image2, gl.TEXTURE2, 2, u_Sampler2); };
+    image2.src = '../images/stone.jpg';
+
+    var image3 = new Image();
+    if (!image3){
+        console.log('Failed to create the image3 object');
+        return false;
+    }
+    image3.onload = function(){ sendTextureToGLSL(image3, gl.TEXTURE3, 3, u_Sampler3); };
+    image3.src = '../images/netherrack.png';
 
     return true;
 }
   
-function sendTextureToGLSL(image) {
+function sendTextureToGLSL(image, activeTex, texNum, u_sampler) {
     var texture = gl.createTexture();   // Create a texture object
     if (!texture) {
         console.log('Failed to create the texture object');
@@ -309,7 +308,7 @@ function sendTextureToGLSL(image) {
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); // Flip the image's y axis
     // Enable texture unit0
-    gl.activeTexture(gl.TEXTURE0);
+    gl.activeTexture(activeTex);
     // Bind the texture object to the target
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -319,7 +318,7 @@ function sendTextureToGLSL(image) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
 
     // Set the texture unit 0 to the sampler
-    gl.uniform1i(u_Sampler0, 0);
+    gl.uniform1i(u_sampler, texNum);
 
     // gl.clear(gl.COLOR_BUFFER_BIT);   // Clear <canvas>
 
@@ -335,6 +334,10 @@ function main() {
 
     // set up actions for HTML UI elements
     addActionsForHtmlUI();
+
+    g_camera = new Camera();
+    g_map = new Map();
+    document.onkeydown = keydown;
 
     // Register function (event handler) to be called on a mouse press
     // canvas.onmousedown = click;
@@ -357,7 +360,7 @@ function tick() {
     g_seconds = performance.now()/1000 - g_startTime;
 
     // update animations
-    updateAnimationAngles();
+    // updateAnimationAngles();
 
     // draw everything
     renderScene();
@@ -366,186 +369,107 @@ function tick() {
     requestAnimationFrame(tick);
 }
 
-function updateAnimationAngles(){
-    if (g_animate){
-        // c l a m p 
-        g_botSnoutAngle = Math.max(-10, Math.min(0, -10 * Math.sin(g_seconds)));
-
-        // walking cycle
-        g_legAngle1 = 20 * Math.sin(g_seconds * 3);
-        g_legAngle2 = -g_legAngle1;
-
-        // tail wagging
-        g_tail1Angle = 20 * Math.sin(g_seconds*2);
-        document.getElementById('tail1Value').textContent = Math.round(g_tail1Angle);
-        document.getElementById('tail1Slide').value = g_tail1Angle;
-        g_tail2Angle = 10 * Math.sin(g_seconds*2);
-        document.getElementById('tail2Value').textContent = Math.round(g_tail2Angle);
-        document.getElementById('tail2Slide').value = g_tail2Angle;
-        g_tail3Angle = 5 * Math.sin(g_seconds*2);
-        document.getElementById('tail3Value').textContent = Math.round(g_tail3Angle);
-        document.getElementById('tail3Slide').value = g_tail3Angle;
+function keydown(ev) {
+    switch(ev.keyCode) {
+      case 87: // W
+        g_camera.moveForward();
+        break;
+      case 83: // S
+        g_camera.moveBackwards();
+        break;
+      case 68: // D
+        g_camera.moveRight();
+        break;
+      case 65: // A
+        g_camera.moveLeft();
+        break;
+      case 81: // Q
+        g_camera.panLeft();
+        break;
+      case 69: // E
+        g_camera.panRight();
+        break;
     }
-
-    if (poke && !nodded){
-        if (nod_start === null) {
-            nod_start = g_seconds;
-        }
-
-        // head nodding
-        g_headAngle = 30 * Math.sin(g_seconds*3);
-        document.getElementById('headValue').textContent = Math.round(g_headAngle);
-        document.getElementById('headSlide').value = g_headAngle;
-
-        // tail wagging
-        g_tail1Angle = 20 * Math.sin(g_seconds*4);
-        document.getElementById('tail1Value').textContent = Math.round(g_tail1Angle);
-        document.getElementById('tail1Slide').value = g_tail1Angle;
-        g_tail2Angle = 10 * Math.sin(g_seconds*4);
-        document.getElementById('tail2Value').textContent = Math.round(g_tail2Angle);
-        document.getElementById('tail2Slide').value = g_tail2Angle;
-        g_tail3Angle = 5 * Math.sin(g_seconds*4);
-        document.getElementById('tail3Value').textContent = Math.round(g_tail3Angle);
-        document.getElementById('tail3Slide').value = g_tail3Angle;
-
-        if (g_seconds - nod_start >= 4) {
-            nodded = true;
-            nod_start = null; // Reset so it can be triggered again
-        }
-    }
-}
+  }
+  
+// camera variables!
+// var g_eye = [0, 0, 1];
+// var g_at = [0, 0, -100];
+// var g_up = [0, 1, 0];
 
 // Draw every shape that is supposed to be on the canvas
 function renderScene(){
     // check time at start of draw
     var startTime = performance.now();
 
-    // c l a m p
-    g_horizAngle = Math.max(-180, Math.min(180, g_horizAngle));
-    g_vertAngle = Math.max(-90, Math.min(90, g_vertAngle));
-
-    // pass matrix
-    var u_GlobalRotMat = new Matrix4().rotate(g_horizAngle, 0, 1, 0).rotate(g_vertAngle, 1, 0, 0);
-    gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, u_GlobalRotMat.elements);
-
-    // pass projection matrix
-    var projMat = new Matrix4();
-    gl.uniformMatrix4fv(u_ProjectionMatrix, false, projMat.elements);
-
-    // pass view matrix
-    var viewMat = new Matrix4();
-    gl.uniformMatrix4fv(u_ViewMatrix, false, viewMat.elements);
-
-    // pass matrix to u_ModelMatrix attrib
-    var globalRotMat = new Matrix4().rotate(g_horizAngle,0,1,0);
-    gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMat.elements);
-
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    // c l a m p
+    // g_horizAngle = Math.max(-180, Math.min(180, g_horizAngle));
+    // g_vertAngle = Math.max(-90, Math.min(90, g_vertAngle));
+
+    // pass projection matrix
+    // var projMat = new Matrix4();
+    // projMat.setPerspective(50, 1*canvas.width/canvas.height, 0.1, 100); // (angle, aspect, near plane, far plane)
+    gl.uniformMatrix4fv(u_ProjectionMatrix, false, g_camera.projectionMatrix.elements);
+
+    // pass view matrix
+    // var viewMat = new Matrix4();
+    // viewMat.setLookAt(
+    //     g_camera.eye.elements[0], g_camera.eye.elements[1], g_camera.eye.elements[2],
+    //     g_camera.at.elements[0], g_camera.at.elements[1], g_camera.at.elements[2], 
+    //     g_camera.up.elements[0], g_camera.up.elements[1], g_camera.up.elements[2]);
+    gl.uniformMatrix4fv(u_ViewMatrix, false, g_camera.viewMatrix.elements);
+
+    // pass matrix
+    // var u_GlobalRotMat = new Matrix4()
+    // u_GlobalRotMat.rotate(g_horizAngle, 0, 1, 0);
+    // u_GlobalRotMat.rotate(g_vertAngle, 1, 0, 0);
+    // gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, u_GlobalRotMat.elements);
+
+    // pass matrix to u_ModelMatrix attrib
+    var globalRotMat = new Matrix4()
+    globalRotMat.rotate(g_horizAngle,0,1,0);
+    globalRotMat.rotate(g_vertAngle, 1, 0, 0);
+    gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMat.elements);
+
+    g_map.render();
+
+    // skybox!
+    let g_skybox = new Cube();
+    g_skybox.textureNum = 0;
+	g_skybox.matrix.setTranslate(
+		g_camera.eye.elements[0],
+		g_camera.eye.elements[1],
+		g_camera.eye.elements[2]
+	);
+	g_skybox.matrix.scale(1000, 1000, 1000);
+    // rotate!!!
+	g_skybox.matrix.rotate(g_seconds, 0, 1, 0);
+	g_skybox.matrix.translate(-0.5, -0.5, -0.5);
+	g_skybox.render();
+
+    // floor
+    var floor = new Cube();
+    floor.color = [1.0, 0.0, 0.0, 1.0];
+    floor.textureNum = 5;
+    floor.matrix.translate(0, -0.75, 0);
+    floor.matrix.scale(20, 0, 20);
+    floor.matrix.translate(-0.5, 0, -0.5);
+    floor.render();
+
     // body 
-    var body = new Cube();
-    body.matrix.translate(-0.3, -0.5, -0.175);
-    body.matrix.scale(0.8, 0.5, 0.5);
-    drawCube(body.matrix, darkGray);
-
-    // head 
-    var head = new Cube();
-    head.matrix.setTranslate(0.3, -0.2, -0.1);
-    head.matrix.rotate(g_headAngle, 0, 0);
-    var headTopSnout = new Matrix4(head.matrix);
-    var headBotSnout = new Matrix4(head.matrix);
-    var headCollar = new Matrix4(head.matrix);
-    head.matrix.scale(0.35, 0.35, 0.35);
-    drawCube(head.matrix, white, -1);
-
-    // top of snout
-    var topSnout = new Cube();
-    topSnout.matrix = headTopSnout;
-    topSnout.matrix.translate(0.3, 0.1, 0.075);
-    topSnout.matrix.scale(0.2, 0.1, 0.2);
-    drawCube(topSnout.matrix, gray, -2);
-
-    // bottom of snout
-    var botSnout = new Cube();
-    botSnout.matrix = headBotSnout;
-    botSnout.matrix.rotate(g_botSnoutAngle, 0, 0);
-    botSnout.matrix.translate(0.3, 0.05, 0.08);
-    botSnout.matrix.scale(0.19, 0.09, 0.19);
-    drawCube(botSnout.matrix, darkGray);
-
-    // collar 
-    var collar = new Cube();
-    collar.matrix = headCollar;
-    collar.matrix.translate(0, -0.05, 0.03);
-    collar.matrix.scale(0.33, 0.1, 0.3);
-    drawCube(collar.matrix, red, -1);
-
-    // front right leg
-    var bLeftLeg = new Cube();
-    bLeftLeg.matrix.translate(-0.1, -0.45, 0.15);
-    bLeftLeg.matrix.rotate(180 + g_legAngle1, 0, 0, 1);
-    bLeftLeg.matrix.scale(0.15, 0.3, 0.15);
-    drawCube(bLeftLeg.matrix, midGray);
-    
-    var bRightLeg = new Cube();
-    bRightLeg.matrix.translate(-0.1, -0.45, -0.15);
-    bRightLeg.matrix.rotate(180 + g_legAngle2, 0, 0, 1);
-    bRightLeg.matrix.scale(0.15, 0.3, 0.15);
-    drawCube(bRightLeg.matrix, gray);
-
-    var fLeftLeg = new Cube();
-    fLeftLeg.matrix.translate(0.4, -0.45, 0.15);
-    fLeftLeg.matrix.rotate(180 + g_legAngle2, 0, 0, 1);
-    fLeftLeg.matrix.scale(0.15, 0.3, 0.15);
-    drawCube(fLeftLeg.matrix, midGray);
-
-    var fRightLeg = new Cube();
-    fRightLeg.matrix.setTranslate(0.4, -0.45, -0.15);
-    fRightLeg.matrix.rotate(180 + g_legAngle1, 0, 0, 1);
-    fRightLeg.matrix.scale(0.15, 0.3, 0.15);
-    drawCube(fRightLeg.matrix, gray);
-
-    // Tail
-    var tail1 = new Cube();
-    tail1.matrix.setTranslate(-0.2, -0.2, 0.0);
-    tail1.matrix.rotate(135, 0, 0, 1); 
-    tail1.matrix.rotate(g_tail1Angle, 1, 0, 0); 
-    var tail1to2 = new Matrix4(tail1.matrix);
-    tail1.matrix.scale(0.1, 0.2, 0.1); 
-    drawCube(tail1.matrix, gray);
-
-    var tail2 = new Cube();
-    tail2.matrix = tail1to2;
-    tail2.matrix.scale(0.1, 0.2, 0.1); 
-    tail2.matrix.translate(0.01, 0.81, 0.001);
-    tail2.matrix.rotate(g_tail2Angle, 1, 0, 0); 
-    var tail2to3 = new Matrix4(tail2.matrix);
-    drawCube(tail2.matrix, midGray);
-
-    var tail3 = new Cube();
-    tail3.matrix = tail2to3;
-    tail3.matrix.translate(0.01, 0.81, 0.001);
-    tail3.matrix.rotate(g_tail3Angle, 1, 0, 0); 
-    drawCube(tail3.matrix, darkGray);
+    // var body = new Cube();
+    // body.color = [1, 0, 0, 1];
+    // body.textureNum = 0;
+    // body.matrix.translate(-0.25, -0.75, 0);
+    // body.matrix.rotate(-5, 1, 0, 0);
+    // body.matrix.scale(0.5, 0.3, 0.5);
+    // body.render();
 
     var duration = performance.now() - startTime;
     sendTextToHtml("ms: " + Math.floor(duration) + " fps: " + Math.floor(10000/duration), "numdot");
-}
-
-function drawCube(M, color, tn){
-    var cube = new Cube();
-    cube.matrix = M;
-    cube.color = color;
-    cube.textureNum = tn;
-    cube.render();
-}
-
-function drawCone(M, color){
-    var cone = new Cone();
-    cone.matrix = M;
-    cone.color = color;
-    cone.render();
 }
 
 function sendTextToHtml(text, htmlID){
