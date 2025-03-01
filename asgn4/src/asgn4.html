@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8" />
+      <title>asgn4</title>
+   </head>
+
+   <body onload="main()">
+      <!-- Create a canvas (400x400) Note: size and origin -->
+      <canvas id="asgn4" width="400" height="400" >
+         Please use a browser that supports "canvas"
+      </canvas>
+
+      <p id="numdot"> XXX </p>
+
+      Camera Angle:<input type="range" id="horizAngleSlide" min="0" max="360" value="0" class = "slider">
+      <span id="horizAngleValue">0</span>
+      <br>
+      Light X:<input type="range" id="lightSlideX" min="-375" max="375" value="0" class = "slider">
+      <span id="lightValueX">0</span>
+      <br>
+      Light Y:<input type="range" id="lightSlideY" min="0" max="250" value="100" class = "slider">
+      <span id="lightValueY">1</span>
+      <br>
+      Light Z:<input type="range" id="lightSlideZ" min="-400" max="250" value="100" class = "slider">
+      <span id="lightValueZ">1</span>
+
+      <br>
+      Normal: <button type="button" id="normal_on">ON</button>
+      <button type="button" id="normal_off">OFF</button>
+      <br>
+      Light: <button type="button" id="light_on">ON</button>
+      <button type="button" id="light_off">OFF</button>
+      <br>
+      Spotlight: <button type="button" id="spot_on">ON</button>
+      <button type="button" id="spot_off">OFF</button>
+
+      <br>
+      <br>
+      Red:<input type="range" id="redSlide" min="0" max="255" value="255" class = "slider">
+      <span id="redValue">255</span>
+      <br>
+      Green:<input type="range" id="greenSlide" min="0" max="255" value="255" class = "slider">
+      <span id="greenValue">255</span>
+      <br>
+      Blue:<input type="range" id="blueSlide" min="0" max="255" value="255" class = "slider">
+      <span id="blueValue">255</span>
+      
+
+      <br><br>
+      Oliver Pearce
+      <br>
+      opearce@ucsc.edu
+
+      <script src="../lib/webgl-utils.js"></script>
+      <script src="../lib/webgl-debug.js"></script>
+      <script src="../lib/cuon-utils.js"></script>
+      <script src="../lib/cuon-matrix-cse160.js"></script>
+
+      <script type=text/javascript src="Triangle.js"></script>
+      <script type=text/javascript src="Point.js"></script>
+      <script type=text/javascript src="Circle.js"></script>
+      <script type=text/javascript src="Cube.js"></script>
+      <script type=text/javascript src="Sphere.js"></script>
+      <script type=text/javascript src="asgn4.js"></script>
+      <script type=text/javascript src="Camera.js"></script>
+   </body>
+</html>
