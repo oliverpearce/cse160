@@ -105,9 +105,9 @@ var FSHADER_SOURCE =`
 
          // gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
          globalLight += specular;
-      }
 
-      gl_FragColor = vec4(globalLight, 1.0);
+         gl_FragColor = vec4(globalLight, 1.0);
+      }
     }`
 
 // Globals
