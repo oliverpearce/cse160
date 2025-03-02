@@ -102,10 +102,9 @@ var FSHADER_SOURCE =`
                globalLight = mix(globalLight, spotEffect, spotFactor);
             }
          }
-
          // gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+         // PLEASE
          globalLight += specular;
-
          gl_FragColor = vec4(globalLight, 1.0);
       }
     }`
