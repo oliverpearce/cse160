@@ -35,6 +35,13 @@ var FSHADER_SOURCE =`
     varying vec4 v_VertPos;
     uniform bool u_lightOn;
 
+    uniform bool u_spotOn;
+    uniform vec3 u_spotPos;
+    uniform vec3 u_spotColor;
+    uniform vec3 u_spotDir;
+    uniform float u_spotCutoff;
+    uniform float u_spotExp;
+
     void main() {
       if(u_whichTexture == -3){
          gl_FragColor = vec4((v_Normal+1.0)/2.0, 1.0); // Use normal
@@ -80,10 +87,27 @@ var FSHADER_SOURCE =`
       float specular = pow(max(dot(E,R), 0.0), 10.0) * 0.5;
       vec3 diffuse = vec3(gl_FragColor) * nDotL * 0.8;
       vec3 ambient = vec3(gl_FragColor) * 0.3;
+      vec3 globalLight = ambient + diffuse;
 
       if(u_lightOn){
-            gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+         if(u_spotOn){
+            vec3 spotDir = normalize(-u_spotDir);
+            vec3 spotVector = normalize(u_spotPos - vec3(v_VertPos));
+            float spotCos = dot(spotDir, spotVector);
+
+            if(spotCos > cos(radians(u_spotCutoff))){
+               float spotFactor = pow(spotCos, u_spotExp);
+               vec3 spotEffect = u_spotColor * spotFactor;
+               // globalLight += spotEffect;
+               globalLight = mix(globalLight, spotEffect, spotFactor);
+            }
+         }
+
+         // gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+         globalLight += specular;
       }
+
+      gl_FragColor = vec4(globalLight, 1.0);
     }`
 
 // Globals
@@ -113,7 +137,18 @@ var horizAngle = 0; // Camera
 // Lighting 
 var g_normalOn = false;
 var g_lightOn = true;
+var u_lightOn;
 var g_lightPos = [0,1,1];
+
+var g_spotOn = true;
+var u_spotOn;
+var u_spotPos;
+var g_spotPos = [-2.5, 1.0, -1.5];
+var u_spotColor;
+var g_spotColor = [1.0, 0.0, 0.0];
+var u_spotDir;
+var u_spotCutoff;
+var u_spotExp;
 
 // set up canvas and gl variables
 function setupWebGL(){
@@ -252,6 +287,50 @@ function connectVariablesToGLSL(){
    u_Sampler2 = gl.getUniformLocation(gl.program, 'u_Sampler2');
    if (!u_Sampler2) {
      console.log('Failed to get the storage location of u_Sampler2');
+     return false;
+   }
+
+   // on, pos, color, dir, cutoff, exp
+
+   // Get the storage location of u_spotOn
+   u_spotOn = gl.getUniformLocation(gl.program, 'u_spotOn');
+   if (!u_spotOn) {
+     console.log('Failed to get the storage location of u_spotOn');
+     return false;
+   }
+
+   // Get the storage location of u_spotPos
+   u_spotPos = gl.getUniformLocation(gl.program, 'u_spotPos');
+   if (!u_spotPos) {
+     console.log('Failed to get the storage location of u_spotPos');
+     return false;
+   }
+
+   // Get the storage location of u_spotColor
+   u_spotColor = gl.getUniformLocation(gl.program, 'u_spotColor');
+   if (!u_spotColor) {
+     console.log('Failed to get the storage location of u_spotColor');
+     return false;
+   }
+
+   // Get the storage location of u_spotDir
+   u_spotDir = gl.getUniformLocation(gl.program, 'u_spotDir');
+   if (!u_spotDir) {
+     console.log('Failed to get the storage location of u_spotDir');
+     return false;
+   }
+
+   // Get the storage location of u_spotCutoff
+   u_spotCutoff = gl.getUniformLocation(gl.program, 'u_spotCutoff');
+   if (!u_spotCutoff) {
+     console.log('Failed to get the storage location of u_spotCutoff');
+     return false;
+   }
+
+   // Get the storage location of u_spotPos
+   u_spotExp = gl.getUniformLocation(gl.program, 'u_spotExp');
+   if (!u_spotExp) {
+     console.log('Failed to get the storage location of u_spotExp');
      return false;
    }
 
@@ -482,6 +561,17 @@ function renderScene(){
    // Pass the light status
    gl.uniform1i(u_lightOn, g_lightOn);
 
+   // Pass the spotlight status
+   gl.uniform1i(u_spotOn, g_spotOn);
+
+   gl.uniform3fv(u_spotPos, new Float32Array(g_spotPos));
+	gl.uniform3fv(u_spotDir, new Float32Array([0.0, -1.0, 0.0]));
+   // Cutoff angle in degrees
+	gl.uniform1f(u_spotCutoff, 30.0); 
+   // Spot intensity falloff
+	gl.uniform1f(u_spotExp, 15.0); 
+	gl.uniform3fv(u_spotColor, new Float32Array(g_spotColor));
+
    // Draw the light
    var light = new Cube();
    light.color=[2,2,0,1];
@@ -492,7 +582,7 @@ function renderScene(){
 
    // Draw Sphere 
    var sphere = new Sphere();
-   sphere.color = [0.9, 0.6, 0.95, 1];
+   sphere.color = [1.0, 1.0, 1.0, 1];
    sphere.textureNum = 0;
    if (g_normalOn) sphere.textureNum = -3;
    sphere.matrix.scale(0.5, 0.5, 0.5);
