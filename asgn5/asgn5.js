@@ -1,7 +1,7 @@
 // import './asgn5.css'
-// import * as THREE from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-// import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
 // every three.js project needs a scene, camera, and renderer
 const scene = new THREE.Scene();
