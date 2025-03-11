@@ -5,6 +5,13 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
 // every three.js project needs a scene, camera, and renderer
 const scene = new THREE.Scene();
+// https://threejs.org/manual/#en/fog
+{
+  const near = 50;
+  const far = 60;
+  const color = 'lightblue';
+  scene.fog = new THREE.Fog(color, near, far);
+}
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
