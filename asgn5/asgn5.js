@@ -1,4 +1,4 @@
-import './style.css'
+import './asgn5.css'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
